@@ -3,67 +3,95 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Scanner QR/Barra</title>
+<title>Leitor QR/Barra Robust</title>
 <style>
-  html, body { margin:0; padding:0; height:100%; background:#000; display:flex; justify-content:center; align-items:center; }
-  video { width:100%; height:100%; object-fit:cover; }
+  body { margin:0; padding:20px; font-family:sans-serif; background:#111; color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; min-height:100vh; }
+  input { margin-bottom:15px; font-size:16px; }
+  canvas { max-width:100%; margin-top:10px; border:2px solid #22c55e; }
 </style>
 </head>
 <body>
-<video id="video" autoplay playsinline></video>
-<canvas id="canvas" style="display:none;"></canvas>
 
-<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<h2>Escolha uma imagem com QR ou código de barras</h2>
+<input type="file" id="imageInput" accept="image/*">
+<canvas id="canvas"></canvas>
+
 <script>
-const video = document.getElementById('video');
+const imageInput = document.getElementById('imageInput');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const codeReader = new ZXing.BrowserMultiFormatReader();
-let scanning = false;
 
-// Inicia câmera
-async function startCamera() {
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-    video.srcObject = stream;
-    scanning = true;
-    requestAnimationFrame(scanFrame);
-  } catch(e) {
-    alert("Não foi possível acessar a câmera: " + e.message);
-  }
-}
+imageInput.addEventListener('change', async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
 
-// Captura frame e tenta ler
-async function scanFrame() {
-  if (!scanning) return;
+  const img = new Image();
+  img.onload = async () => {
+    // Redimensiona mantendo proporção
+    const maxWidth = 1024;
+    const scale = Math.min(1, maxWidth / img.width);
+    canvas.width = img.width * scale;
+    canvas.height = img.height * scale;
 
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-  try {
-    const result = codeReader.decodeFromCanvas(canvas);
-    if(result) {
-      scanning = false;
-      alert("Código detectado: " + result.getText());
-      stopCamera();
-      return;
+    // Pré-processamento: melhora contraste
+    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let data = imageData.data;
+
+    // Converte para cinza e aumenta contraste
+    const contrast = 1.5; // 1 = normal, >1 aumenta contraste
+    const brightness = 20; // ajuste leve de brilho
+    for(let i=0;i<data.length;i+=4){
+      let gray = 0.299*data[i]+0.587*data[i+1]+0.114*data[i+2];
+      gray = Math.min(255, Math.max(0, gray*contrast + brightness));
+      data[i]=data[i+1]=data[i+2]=gray;
     }
-  } catch(e) {
-    // nenhum código detectado neste frame
-  }
+    ctx.putImageData(imageData,0,0);
 
-  requestAnimationFrame(scanFrame);
-}
+    // Cria o detector
+    try {
+      const barcodeDetector = new BarcodeDetector({
+        formats: [
+          'code_128','code_39','code_93','codabar','ean_8','ean_13',
+          'upc_a','upc_e','qr_code','itf','pdf417','aztec'
+        ]
+      });
 
-// Para a câmera
-function stopCamera() {
-  const stream = video.srcObject;
-  if(stream) stream.getTracks().forEach(track => track.stop());
-  video.srcObject = null;
-}
+      const barcodes = await barcodeDetector.detect(canvas);
 
-startCamera();
+      if(barcodes.length===0){
+        alert("Nenhum código detectado.");
+        return;
+      }
+
+      // Desenha caixas e mostra texto
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.lineWidth=4;
+      ctx.font="18px sans-serif";
+      ctx.textBaseline="top";
+
+      let output = "Códigos detectados:\n";
+      barcodes.forEach((b,i)=>{
+        const box = b.boundingBox;
+        ctx.strokeStyle="#22c55e";
+        ctx.strokeRect(box.x,box.y,box.width,box.height);
+        ctx.fillStyle="#22c55e";
+        ctx.fillText(`${b.format}: ${b.rawValue}`, box.x+2, box.y+2);
+        output += `${i+1}: [${b.format}] ${b.rawValue}\n`;
+      });
+
+      alert(output);
+
+    } catch(err){
+      console.error("Erro ao detectar códigos:",err);
+      alert("Erro ao detectar códigos: "+err);
+    }
+  };
+
+  img.src = URL.createObjectURL(file);
+});
 </script>
+
 </body>
 </html>

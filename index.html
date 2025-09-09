@@ -1,48 +1,69 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Leitor QR/Barra Simples</title>
-  <style>
-    html,body { margin:0; padding:0; height:100%; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#fff; font-family:sans-serif; }
-    video { width:100%; height:100%; object-fit:cover; display:none; }
-    button { padding:15px 25px; font-size:18px; border:none; border-radius:8px; background:#22c55e; color:#fff; cursor:pointer; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scanner QR/Barra</title>
+<style>
+  html, body { margin:0; padding:0; height:100%; background:#000; display:flex; justify-content:center; align-items:center; }
+  video { width:100%; height:100%; object-fit:cover; }
+</style>
 </head>
 <body>
-  <button id="startBtn">Ativar Câmera</button>
-  <video id="video" playsinline></video>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas" style="display:none;"></canvas>
 
-  <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
-  <script>
-    const video = document.getElementById('video');
-    const startBtn = document.getElementById('startBtn');
-    const codeReader = new ZXing.BrowserMultiFormatReader();
+<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<script>
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const codeReader = new ZXing.BrowserMultiFormatReader();
+let scanning = false;
 
-    startBtn.addEventListener('click', async () => {
-      try {
-        // Pede câmera traseira
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-        video.srcObject = stream;
-        video.style.display = "block";
-        startBtn.style.display = "none";
-        video.play();
+// Inicia câmera
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+    video.srcObject = stream;
+    scanning = true;
+    requestAnimationFrame(scanFrame);
+  } catch(e) {
+    alert("Não foi possível acessar a câmera: " + e.message);
+  }
+}
 
-        codeReader.decodeFromVideoDevice(null, 'video', (result, err) => {
-          if (result) {
-            alert("Código detectado: " + result.getText());
-            codeReader.reset();
-            stream.getTracks().forEach(t => t.stop());
-            video.style.display = "none";
-            startBtn.style.display = "block";
-          }
-        });
-      } catch (e) {
-        console.error("Erro ao acessar câmera:", e);
-        alert("Não foi possível acessar a câmera. Verifique as permissões no navegador.");
-      }
-    });
-  </script>
+// Captura frame e tenta ler
+async function scanFrame() {
+  if (!scanning) return;
+
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  try {
+    const result = codeReader.decodeFromCanvas(canvas);
+    if(result) {
+      scanning = false;
+      alert("Código detectado: " + result.getText());
+      stopCamera();
+      return;
+    }
+  } catch(e) {
+    // nenhum código detectado neste frame
+  }
+
+  requestAnimationFrame(scanFrame);
+}
+
+// Para a câmera
+function stopCamera() {
+  const stream = video.srcObject;
+  if(stream) stream.getTracks().forEach(track => track.stop());
+  video.srcObject = null;
+}
+
+startCamera();
+</script>
 </body>
 </html>

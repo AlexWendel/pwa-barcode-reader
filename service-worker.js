@@ -1,20 +1,2 @@
-const CACHE_NAME = "qrapp-v1";
-const FILES_TO_CACHE = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./icon-192.png",
-  "./icon-512.png"
-];
-
-self.addEventListener("install", (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
-  );
-});
-
-self.addEventListener("fetch", (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => response || fetch(e.request))
-  );
-});
+if(!self.define){let e,a={};const c=(c,n)=>(c=new URL(c+".js",n).href,a[c]||new Promise((a=>{if("document"in self){const e=document.createElement("script");e.src=c,e.onload=a,document.head.appendChild(e)}else e=c,importScripts(c),a()})).then((()=>{let e=a[c];if(!e)throw new Error(`Module ${c} didn’t register its module`);return e})));self.define=(n,i)=>{const r=e||("document"in self?document.currentScript.src:"")||location.href;if(a[r])return;let d={};const s=e=>c(e,r),o={module:{uri:r},exports:d,require:s};a[r]=Promise.all(n.map((e=>o[e]||s(e)))).then((e=>(i(...e),d)))}}define(["./workbox-1f84e78b"],(function(e){"use strict";self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"apple-touch-icon.f40613a5.png",revision:"c072601be92927f395dbed17b09f1e9e"},{url:"barcode-scanner-main.36931676.js",revision:"8be426a00cd102940d69bce521c35eb9"},{url:"barcode-scanner-main.36931676.js.map",revision:"369621a4a870dfdbce4a6b5e0b138481"},{url:"barcode-scanner-main.3d6cffce.js",revision:"1c234c81e478ed83c7a7ad19a04214e7"},{url:"barcode-scanner-main.3d6cffce.js.map",revision:"a578a34bf423549408c97433d272dc4f"},{url:"barcode-scanner-main.b587c87d.css",revision:"74ef14ad98dcc1723aa9475aa4e960ae"},{url:"barcode-scanner-main.b587c87d.css.map",revision:"5e61c01658d8a6d2bb84c21da6730a57"},{url:"camera-scanner.96194da7.png",revision:"d6af68b002fbb92cd802748a45e22a3a"},{url:"es.e18d237c.js",revision:"1bb5ba8e81f5c73a1478706050b114af"},{url:"es.e18d237c.js.map",revision:"889a259420cba4d0de3622b57d47b555"},{url:"favicon.a05bdb0a.ico",revision:"ece89efb9e6bf43b4a1a4bddc3e6c0ee"},{url:"icon-large.d7217ddc.png",revision:"5828d4de36aead7c0dbc6f46e7e1b0a1"},{url:"icon-medium.280ae3e3.png",revision:"8c841831246f8d15574c0310bf18cb4a"},{url:"icon-small.3efe2498.png",revision:"02e36dbc3df860e62bae68d22098bf47"},{url:"image-scanner.f521cdaa.png",revision:"78da91f8cc6c07a52dcf19e99d3b1c4a"},{url:"index.html",revision:"0178837cc5cc0a82ab5a0a8a9298ad09"},{url:"manifest.webmanifest",revision:"7097a9dc1178af2e235b41dbb584a82f"},{url:"spinner-light.68830a89.svg",revision:"17827dfd7a889999e533d7024a5496b5"}],{})}));
+//# sourceMappingURL=service-worker.js.map

@@ -1,0 +1,2 @@
+.modal{z-index:1000;background-color:#00000080;justify-content:center;align-items:center;width:100%;height:100%;display:flex;position:fixed;top:0;left:0}.modal-content{text-align:center;background-color:#fff;border-radius:.5rem;padding:2rem}.modal-content .spinner{border:4px solid #f3f3f3;border-top-color:#3498db;border-radius:50%;width:40px;height:40px;margin:0 auto 1rem;animation:1s linear infinite spin}@keyframes spin{0%{transform:rotate(0)}to{transform:rotate(360deg)}}
+/*# sourceMappingURL=barcode-scanner-main.0edaa3d4.css.map */
